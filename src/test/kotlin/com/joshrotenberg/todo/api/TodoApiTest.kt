@@ -41,14 +41,11 @@ class TodoApiTest {
 
         with(runPost(todo)) {
             assertEquals(response.status(), HttpStatusCode.Created)
-            val t = gson.fromJson<Todo>(response.content, Todo::class.java)
+            val t = gson.fromJson<Todo>(response.content, Todo::class.java).withUrl(request)
 
             with(runGet(t.id!!)) {
-                println(request.local.host)
                 assertEquals(response.status(), HttpStatusCode.OK)
-                println(t)
-                println(gson.fromJson<Todo>(response.content, Todo::class.java))
-                assertEquals(t, gson.fromJson<Todo>(response.content, Todo::class.java))
+                assertEquals(t, gson.fromJson<Todo>(response.content, Todo::class.java).withUrl(request))
             }
         }
     }
