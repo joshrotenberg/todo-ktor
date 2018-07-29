@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory
 
 val LOG: Logger = LoggerFactory.getLogger("todo-ktor-app")
 
-inline infix fun Todo.withUrl(request: ApplicationRequest): Todo {
+infix fun Todo.withUrl(request: ApplicationRequest): Todo {
     val local = request.local
     this.url = "${local.scheme}://${local.host}:${local.port}/${this.id}"
     return this
