@@ -1,13 +1,24 @@
 package com.joshrotenberg.todo.repository
 
 import com.joshrotenberg.todo.model.Todo
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.StdOutSqlLogger
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.addLogger
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.update
 
+const val ID_LENGTH = 36
+const val TITLE_LENGTH = 256
 
 object Todos : Table() {
-    val id = varchar("id", 36).primaryKey()
-    val title = varchar("title", 256)
+    val id = varchar("id", ID_LENGTH).primaryKey()
+    val title = varchar("title", TITLE_LENGTH)
     val order = integer("order")
     val completed = bool("completed")
 }
@@ -22,7 +33,8 @@ interface RepoInterface {
     fun deleteTodo(id: String): Number
 }
 
-class TodoRepository(val db: Database = Database.connect("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver")) : RepoInterface {
+class TodoRepository(val db: Database = Database.connect("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1",
+        driver = "org.h2.Driver")) : RepoInterface {
     override fun init() {
         transaction {
             addLogger(StdOutSqlLogger)

@@ -42,7 +42,6 @@ apply plugin: 'application'
 apply plugin: "com.google.cloud.tools.jib"
 apply plugin: "io.gitlab.arturbosch.detekt"
 
-
 kotlin.experimental.coroutines = 'enable'
 
 mainClassName = 'io.ktor.server.netty.DevelopmentEngine'

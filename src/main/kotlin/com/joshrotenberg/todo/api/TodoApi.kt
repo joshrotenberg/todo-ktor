@@ -93,7 +93,5 @@ fun Application.main() {
             LOG.info("Fetching all todos")
             call.respond(todos.getTodos())
         }
-
-
     }
 }
