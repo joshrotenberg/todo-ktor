@@ -9,6 +9,7 @@ buildscript {
         slf4j_version = '1.7.25'
         logback_version = '1.2.1'
         junit_version = '4.11'
+        detekt_version = '1.0.0.RC8'
     }
 
     repositories {
@@ -19,9 +20,9 @@ buildscript {
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "com.netflix.nebula:gradle-dependency-lock-plugin:6.0.0"
-        classpath 'com.netflix.nebula:nebula-release-plugin:6.3.5'
         classpath "gradle.plugin.com.google.cloud.tools:jib-gradle-plugin:$jib_version"
+        classpath "gradle.plugin.io.gitlab.arturbosch.detekt:detekt-gradle-plugin:$detekt_version"
+
     }
 }
 
@@ -38,9 +39,9 @@ repositories {
 
 apply plugin: 'kotlin'
 apply plugin: 'application'
-apply plugin: "nebula.dependency-lock"
-apply plugin: "nebula.release"
 apply plugin: "com.google.cloud.tools.jib"
+apply plugin: "io.gitlab.arturbosch.detekt"
+
 
 kotlin.experimental.coroutines = 'enable'
 
@@ -87,6 +88,13 @@ task stage(type: Copy, dependsOn: [clean, build]) {
 
 stage.mustRunAfter(clean)
 
+detekt {
+    version = "$detekt_version"
+    defaultProfile {
+        input = file("src/main/kotlin")
+        filters = ".*/resources/.*,.*/build/.*"
+    }
+}
 compileKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
