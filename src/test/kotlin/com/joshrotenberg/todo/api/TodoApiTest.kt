@@ -103,6 +103,28 @@ class TodoApiTest {
         }
     }
 
+    @Test
+    fun `delete all todos`() = withTestApplication(Application::main) {
+
+        val todo0 = addTodo(Todo(title = "get milk", order = 1, completed = false))
+        val todo1 = addTodo(Todo(title = "get eggs", order = 2, completed = false))
+
+        assertEquals(2, getTodos().count())
+
+        with(handleRequest(HttpMethod.Delete, "/todo/")) {
+            assertEquals(HttpStatusCode.NoContent, response.status())
+        }
+        assertEquals(0, getTodos().count())
+
+        with(handleRequest(HttpMethod.Get, "/todo/${todo0.id}")) {
+            assertEquals(HttpStatusCode.NotFound, response.status())
+        }
+
+        with(handleRequest(HttpMethod.Get, "/todo/${todo1.id}")) {
+            assertEquals(HttpStatusCode.NotFound, response.status())
+        }
+    }
+
 
     private fun TestApplicationEngine.getTodo(id: String): Todo {
         handleRequest(HttpMethod.Get, "/todo/$id") {

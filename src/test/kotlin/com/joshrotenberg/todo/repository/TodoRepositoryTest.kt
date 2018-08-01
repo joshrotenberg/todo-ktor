@@ -58,6 +58,21 @@ class TodoRepositoryTest {
         assertEquals("do more stuff", todoUpdate2.title)
     }
 
+    @Test
+    fun `delete all todos`() {
+        val id0 = Todo.generateId()
+        r.createTodo(id0, "do stuff", 1, false)
+
+        val id1 = Todo.generateId()
+        r.createTodo(id1, "do more stuff", 2, false)
+
+        val numDeleted = r.deleteTodos()
+        assertEquals(2, numDeleted)
+
+        val todos = r.getTodos()
+        assertEquals(0, todos.count())
+    }
+
     @Test(expected = java.util.NoSuchElementException::class)
     fun `delete a todo`() {
         val id = Todo.generateId()

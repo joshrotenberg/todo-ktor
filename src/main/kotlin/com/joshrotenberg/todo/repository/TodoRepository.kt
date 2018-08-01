@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.StdOutSqlLogger
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.addLogger
+import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
@@ -31,6 +32,7 @@ interface RepoInterface {
     fun getTodos(): List<Todo>
     fun updateTodo(id: String, title: String? = null, order: Int? = null, completed: Boolean? = null)
     fun deleteTodo(id: String): Number
+    fun deleteTodos(): Number
 }
 
 class TodoRepository(val db: Database = Database.connect("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1",
@@ -91,5 +93,9 @@ class TodoRepository(val db: Database = Database.connect("jdbc:h2:mem:test;DB_CL
         }
     }
 
-
+    override fun deleteTodos(): Number {
+        return transaction {
+            Todos.deleteAll()
+        }
+    }
 }

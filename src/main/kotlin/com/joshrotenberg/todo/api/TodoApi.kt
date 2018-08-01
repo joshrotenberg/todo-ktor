@@ -105,5 +105,17 @@ fun Application.main() {
                 call.respond(HttpStatusCode.InternalServerError)
             }
         }
+
+        delete("/todo") {
+            try {
+                LOG.info("Deleting all todos")
+                val numDeleted = todos.deleteTodos()
+                LOG.info("Deleted all $numDeleted todos")
+                call.respond(HttpStatusCode.NoContent)
+            } catch (e: Exception) {
+                LOG.error("Caught some other error: ${e}")
+                call.respond(HttpStatusCode.InternalServerError)
+            }
+        }
     }
 }
