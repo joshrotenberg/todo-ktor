@@ -16,6 +16,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.request.ApplicationRequest
 import io.ktor.request.receive
 import io.ktor.response.respond
+import io.ktor.routing.delete
 import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.routing
@@ -55,13 +56,9 @@ fun Application.main() {
             try {
                 val todo = call.receive<Todo>()
                 LOG.info("creating ${todo}")
-//            if (person.name.isNullOrBlank() || person.email.isNullOrBlank() || person.date == null) {
-//                call.respond(UnprocessableEntity)
-//            } else {
                 val id = Todo.generateId()
                 todos.createTodo(id, todo.title, todo.order, todo.completed)
                 call.respond(HttpStatusCode.Created, todo.copy(id = id))
-//            }
             } catch (e: com.google.gson.JsonSyntaxException) {
                 LOG.error("Syntax error in JSON")
                 call.respond(HttpStatusCode.BadRequest)
@@ -92,6 +89,21 @@ fun Application.main() {
         get("/todo") {
             LOG.info("Fetching all todos")
             call.respond(todos.getTodos())
+        }
+
+        delete("/todo/{id}") {
+            val id = call.parameters["id"] ?: throw IllegalArgumentException("No id in path")
+            try {
+                LOG.info("Deleting todo $id")
+                when (todos.deleteTodo(id)) {
+                    1 -> call.respond(HttpStatusCode.NoContent)
+                    0 -> call.respond(HttpStatusCode.NotFound)
+                    else -> throw IllegalArgumentException("Invalid id")
+                }
+            } catch (e: Exception) {
+                LOG.error("Caught some other error: ${e}")
+                call.respond(HttpStatusCode.InternalServerError)
+            }
         }
     }
 }

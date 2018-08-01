@@ -7,13 +7,15 @@ import com.joshrotenberg.todo.repository.TodoRepository
 import io.ktor.application.Application
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.testing.*
+import io.ktor.server.testing.TestApplicationCall
+import io.ktor.server.testing.TestApplicationEngine
+import io.ktor.server.testing.handleRequest
+import io.ktor.server.testing.setBody
+import io.ktor.server.testing.withTestApplication
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
-
-//inline fun <reified T> Gson.fromJson(json: String) = this.fromJson<T>(json, object: TypeToken<T>() {}.type)
 
 class TodoApiTest {
 
@@ -36,30 +38,15 @@ class TodoApiTest {
     }
 
     @Test
-    fun `test adding a todo`() = withTestApplication(Application::main) {
-        val todo = Todo(title = "do stuff", order = 1, completed = false).toJson()
+    fun `add a todo`() = withTestApplication(Application::main) {
+        val todo = addTodo(Todo(title = "do stuff", order = 1, completed = false))
+        val responseTodo = getTodo(todo.id!!)
 
-        with(runPost(todo)) {
-            assertEquals(response.status(), HttpStatusCode.Created)
-            val t = gson.fromJson<Todo>(response.content, Todo::class.java).withUrl(request)
-
-            with(runGet(t.id!!)) {
-                assertEquals(response.status(), HttpStatusCode.OK)
-                assertEquals(t, gson.fromJson<Todo>(response.content, Todo::class.java).withUrl(request))
-            }
-        }
+        assertEquals(todo, responseTodo)
     }
 
     @Test
-    fun `qwekjn`() = withTestApplication(Application::main) {
-        val emptyTodo = ""
-        with(runPost(emptyTodo)) {
-            println(response.status())
-        }
-    }
-
-    @Test
-    fun `test fetching all todos`() = withTestApplication(Application::main) {
+    fun `fetch all todos`() = withTestApplication(Application::main) {
         handleRequest(HttpMethod.Get, "/todo") {
             addHeader("Accept", "application/json")
         }.response.let {
@@ -67,11 +54,8 @@ class TodoApiTest {
             assertEquals(0, empty.count())
         }
 
-        val todo0 = Todo(title = "get milk", order = 1, completed = false)
-        val todo1 = Todo(title = "get eggs", order = 2, completed = false)
-
-        runPost(todo0.toJson())
-        runPost(todo1.toJson())
+        val todo0 = addTodo(Todo(title = "get milk", order = 1, completed = false))
+        val todo1 = addTodo(Todo(title = "get eggs", order = 2, completed = false))
 
         handleRequest(HttpMethod.Get, "/todo/") {
             addHeader("Accept", "application/json")
@@ -92,9 +76,61 @@ class TodoApiTest {
         }
     }
 
-    private fun TestApplicationEngine.runGet(id: String): TestApplicationCall {
-        return handleRequest(HttpMethod.Get, "/todo/$id") {
+    @Test
+    fun `delete a todo`() = withTestApplication(Application::main) {
+
+        val todo0 = addTodo(Todo(title = "get milk", order = 1, completed = false))
+        val todo1 = addTodo(Todo(title = "get eggs", order = 2, completed = false))
+
+        assertEquals(2, getTodos().count())
+
+        with(handleRequest(HttpMethod.Delete, "/todo/${todo0.id}")) {
+            assertEquals(HttpStatusCode.NoContent, response.status())
+        }
+        assertEquals(1, getTodos().count())
+
+        with(handleRequest(HttpMethod.Get, "/todo/${todo0.id}")) {
+            assertEquals(HttpStatusCode.NotFound, response.status())
+        }
+
+        with(handleRequest(HttpMethod.Delete, "/todo/${todo1.id}")) {
+            assertEquals(HttpStatusCode.NoContent, response.status())
+        }
+        assertEquals(0, getTodos().count())
+
+        with(handleRequest(HttpMethod.Get, "/todo/${todo1.id}")) {
+            assertEquals(HttpStatusCode.NotFound, response.status())
+        }
+    }
+
+
+    private fun TestApplicationEngine.getTodo(id: String): Todo {
+        handleRequest(HttpMethod.Get, "/todo/$id") {
             addHeader("Accept", "application/json")
+        }.response.let {
+            assertEquals(it.status(), HttpStatusCode.OK)
+            return gson.fromJson<Todo>(it.content, Todo::class.java).withUrl(it.call.request)
+        }
+    }
+
+    private fun TestApplicationEngine.getTodos(): List<Todo> {
+        handleRequest(HttpMethod.Get, "/todo/") {
+            addHeader("Accept", "application/json")
+        }.response.let {
+            assertEquals(it.status(), HttpStatusCode.OK)
+            val todosType = object : TypeToken<List<Todo>>() {}.type
+            return gson.fromJson<List<Todo>>(it.content, todosType)
+        }
+    }
+
+    private fun TestApplicationEngine.addTodo(todo: Todo): Todo {
+        handleRequest(HttpMethod.Post, "/todo") {
+            setBody(todo.toJson())
+            addHeader("Content-type", "application/json")
+            addHeader("Accept", "application/json")
+        }.response.let {
+            assertEquals(it.status(), HttpStatusCode.Created)
+            return gson.fromJson<Todo>(it.content, Todo::class.java).withUrl(it.call.request)
         }
     }
 
@@ -102,6 +138,12 @@ class TodoApiTest {
         return handleRequest(HttpMethod.Post, "/todo") {
             setBody(todoJson)
             addHeader("Content-type", "application/json")
+            addHeader("Accept", "application/json")
+        }
+    }
+
+    private fun TestApplicationEngine.runGet(id: String): TestApplicationCall {
+        return handleRequest(HttpMethod.Get, "/todo/$id") {
             addHeader("Accept", "application/json")
         }
     }
