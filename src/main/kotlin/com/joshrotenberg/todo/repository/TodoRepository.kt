@@ -26,11 +26,11 @@ object Todos : Table() {
 
 interface RepoInterface {
     fun init()
-    fun drop()
+    fun destroy()
     fun createTodo(id: String, title: String, order: Int, completed: Boolean)
     fun getTodo(id: String): Todo
     fun getTodos(): List<Todo>
-    fun updateTodo(id: String, title: String? = null, order: Int? = null, completed: Boolean? = null)
+    fun updateTodo(id: String, title: String? = null, order: Int? = null, completed: Boolean? = null): Number
     fun deleteTodo(id: String): Number
     fun deleteTodos(): Number
 }
@@ -44,7 +44,7 @@ class TodoRepository(val db: Database = Database.connect("jdbc:h2:mem:test;DB_CL
         }
     }
 
-    override fun drop() {
+    override fun destroy() {
         transaction {
             SchemaUtils.drop(Todos)
         }
@@ -76,8 +76,8 @@ class TodoRepository(val db: Database = Database.connect("jdbc:h2:mem:test;DB_CL
         }
     }
 
-    override fun updateTodo(id: String, title: String?, order: Int?, completed: Boolean?) {
-        transaction {
+    override fun updateTodo(id: String, title: String?, order: Int?, completed: Boolean?): Number {
+        return transaction {
             val current = getTodo(id)
             Todos.update({ Todos.id eq id }) {
                 it[Todos.title] = title ?: current.title

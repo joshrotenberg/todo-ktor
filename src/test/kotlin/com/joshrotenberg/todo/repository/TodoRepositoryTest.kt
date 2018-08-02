@@ -8,7 +8,7 @@ import org.junit.Test
 
 class TodoRepositoryTest {
 
-    // create the repo once but call init/drop before/after each test
+    // create the repo once but call init/destroy before/after each test
     private val r = TodoRepository()
 
     @Before
@@ -18,7 +18,7 @@ class TodoRepositoryTest {
 
     @After
     fun after() {
-        r.drop()
+        r.destroy()
     }
 
     @Test
@@ -44,7 +44,8 @@ class TodoRepositoryTest {
         assertEquals(1, todo.order)
         assertEquals(false, todo.completed)
 
-        r.updateTodo(todo.id!!, completed = true)
+        val numUpdated = r.updateTodo(todo.id!!, completed = true)
+        assertEquals(1, numUpdated)
 
         val todoUpdate = r.getTodo(id)
         assertEquals(id, todoUpdate.id)

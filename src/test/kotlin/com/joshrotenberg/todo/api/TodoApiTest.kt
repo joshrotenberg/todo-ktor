@@ -7,7 +7,6 @@ import com.joshrotenberg.todo.repository.TodoRepository
 import io.ktor.application.Application
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.testing.TestApplicationCall
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
@@ -30,7 +29,7 @@ class TodoApiTest {
 
     @After
     fun after() {
-        r.drop()
+        r.destroy()
     }
 
     fun Todo.toJson(): String {
@@ -47,7 +46,7 @@ class TodoApiTest {
 
     @Test
     fun `fetch all todos`() = withTestApplication(Application::main) {
-        handleRequest(HttpMethod.Get, "/todo") {
+        handleRequest(HttpMethod.Get, DEFAULT_ENDPOINT) {
             addHeader("Accept", "application/json")
         }.response.let {
             val empty = gson.fromJson(it.content, List::class.java)
@@ -57,7 +56,7 @@ class TodoApiTest {
         val todo0 = addTodo(Todo(title = "get milk", order = 1, completed = false))
         val todo1 = addTodo(Todo(title = "get eggs", order = 2, completed = false))
 
-        handleRequest(HttpMethod.Get, "/todo/") {
+        handleRequest(HttpMethod.Get, DEFAULT_ENDPOINT) {
             addHeader("Accept", "application/json")
         }.response.let {
             val todosType = object : TypeToken<List<Todo>>() {}.type
@@ -84,21 +83,21 @@ class TodoApiTest {
 
         assertEquals(2, getTodos().count())
 
-        with(handleRequest(HttpMethod.Delete, "/todo/${todo0.id}")) {
+        with(handleRequest(HttpMethod.Delete, "$DEFAULT_ENDPOINT/${todo0.id}")) {
             assertEquals(HttpStatusCode.NoContent, response.status())
         }
         assertEquals(1, getTodos().count())
 
-        with(handleRequest(HttpMethod.Get, "/todo/${todo0.id}")) {
+        with(handleRequest(HttpMethod.Get, "$DEFAULT_ENDPOINT/${todo0.id}")) {
             assertEquals(HttpStatusCode.NotFound, response.status())
         }
 
-        with(handleRequest(HttpMethod.Delete, "/todo/${todo1.id}")) {
+        with(handleRequest(HttpMethod.Delete, "$DEFAULT_ENDPOINT/${todo1.id}")) {
             assertEquals(HttpStatusCode.NoContent, response.status())
         }
         assertEquals(0, getTodos().count())
 
-        with(handleRequest(HttpMethod.Get, "/todo/${todo1.id}")) {
+        with(handleRequest(HttpMethod.Get, "$DEFAULT_ENDPOINT/${todo1.id}")) {
             assertEquals(HttpStatusCode.NotFound, response.status())
         }
     }
@@ -111,23 +110,42 @@ class TodoApiTest {
 
         assertEquals(2, getTodos().count())
 
-        with(handleRequest(HttpMethod.Delete, "/todo/")) {
+        with(handleRequest(HttpMethod.Delete, DEFAULT_ENDPOINT)) {
             assertEquals(HttpStatusCode.NoContent, response.status())
         }
         assertEquals(0, getTodos().count())
 
-        with(handleRequest(HttpMethod.Get, "/todo/${todo0.id}")) {
+        with(handleRequest(HttpMethod.Get, "$DEFAULT_ENDPOINT/${todo0.id}")) {
             assertEquals(HttpStatusCode.NotFound, response.status())
         }
 
-        with(handleRequest(HttpMethod.Get, "/todo/${todo1.id}")) {
+        with(handleRequest(HttpMethod.Get, "$DEFAULT_ENDPOINT/${todo1.id}")) {
             assertEquals(HttpStatusCode.NotFound, response.status())
         }
     }
 
+    @Test
+    fun `update a todo`() = withTestApplication(Application::main) {
+
+        val todo0 = addTodo(Todo(title = "get milk", order = 1, completed = false))
+        with(getTodo(todo0.id!!)) {
+            assertEquals(todo0.id, this.id)
+            assertEquals(todo0.title, this.title)
+            assertEquals(todo0.order, this.order)
+            assertEquals(todo0.completed, this.completed)
+        }
+
+        val updated = updateTodo(todo0.id!!, Todo(title = "get whole milk", order = 2, completed = false))
+        with(getTodo(todo0.id!!)) {
+            assertEquals(updated.id, this.id)
+            assertEquals(updated.title, this.title)
+            assertEquals(updated.order, this.order)
+            assertEquals(updated.completed, this.completed)
+        }
+    }
 
     private fun TestApplicationEngine.getTodo(id: String): Todo {
-        handleRequest(HttpMethod.Get, "/todo/$id") {
+        handleRequest(HttpMethod.Get, "$DEFAULT_ENDPOINT/$id") {
             addHeader("Accept", "application/json")
         }.response.let {
             assertEquals(it.status(), HttpStatusCode.OK)
@@ -136,7 +154,7 @@ class TodoApiTest {
     }
 
     private fun TestApplicationEngine.getTodos(): List<Todo> {
-        handleRequest(HttpMethod.Get, "/todo/") {
+        handleRequest(HttpMethod.Get, DEFAULT_ENDPOINT) {
             addHeader("Accept", "application/json")
         }.response.let {
             assertEquals(it.status(), HttpStatusCode.OK)
@@ -146,7 +164,7 @@ class TodoApiTest {
     }
 
     private fun TestApplicationEngine.addTodo(todo: Todo): Todo {
-        handleRequest(HttpMethod.Post, "/todo") {
+        handleRequest(HttpMethod.Post, DEFAULT_ENDPOINT) {
             setBody(todo.toJson())
             addHeader("Content-type", "application/json")
             addHeader("Accept", "application/json")
@@ -156,17 +174,14 @@ class TodoApiTest {
         }
     }
 
-    private fun TestApplicationEngine.runPost(todoJson: String): TestApplicationCall {
-        return handleRequest(HttpMethod.Post, "/todo") {
-            setBody(todoJson)
+    private fun TestApplicationEngine.updateTodo(id: String, todo: Todo): Todo {
+        handleRequest(HttpMethod.Patch, "$DEFAULT_ENDPOINT/$id") {
+            setBody(todo.toJson())
             addHeader("Content-type", "application/json")
             addHeader("Accept", "application/json")
-        }
-    }
-
-    private fun TestApplicationEngine.runGet(id: String): TestApplicationCall {
-        return handleRequest(HttpMethod.Get, "/todo/$id") {
-            addHeader("Accept", "application/json")
+        }.response.let {
+            assertEquals(it.status(), HttpStatusCode.OK)
+            return gson.fromJson<Todo>(it.content, Todo::class.java).withUrl(it.call.request)
         }
     }
 }
