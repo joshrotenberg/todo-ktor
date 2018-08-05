@@ -116,7 +116,7 @@ fun Application.main() {
                 try {
                     LOG.info("Deleting todo $id")
                     when (todos.deleteTodo(id)) {
-                        1 -> call.respond(HttpStatusCode.NoContent)
+                        1 -> call.respond(HttpStatusCode.OK)
                         0 -> call.respond(HttpStatusCode.NotFound)
                         else -> throw IllegalArgumentException("Invalid id")
                     }
@@ -131,7 +131,7 @@ fun Application.main() {
                     LOG.info("Deleting all todos")
                     val numDeleted = todos.deleteTodos()
                     LOG.info("Deleted all $numDeleted todos")
-                    call.respond(HttpStatusCode.NoContent)
+                    call.respond(HttpStatusCode.OK)
                 } catch (e: Exception) {
                     LOG.error("Caught some other error: ${e}")
                     call.respond(HttpStatusCode.InternalServerError)
