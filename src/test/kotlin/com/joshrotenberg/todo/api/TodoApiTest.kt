@@ -84,7 +84,7 @@ class TodoApiTest {
         assertEquals(2, getTodos().count())
 
         with(handleRequest(HttpMethod.Delete, "$DEFAULT_ENDPOINT/${todo0.id}")) {
-            assertEquals(HttpStatusCode.NoContent, response.status())
+            assertEquals(HttpStatusCode.OK, response.status())
         }
         assertEquals(1, getTodos().count())
 
@@ -93,7 +93,7 @@ class TodoApiTest {
         }
 
         with(handleRequest(HttpMethod.Delete, "$DEFAULT_ENDPOINT/${todo1.id}")) {
-            assertEquals(HttpStatusCode.NoContent, response.status())
+            assertEquals(HttpStatusCode.OK, response.status())
         }
         assertEquals(0, getTodos().count())
 
@@ -111,7 +111,7 @@ class TodoApiTest {
         assertEquals(2, getTodos().count())
 
         with(handleRequest(HttpMethod.Delete, DEFAULT_ENDPOINT)) {
-            assertEquals(HttpStatusCode.NoContent, response.status())
+            assertEquals(HttpStatusCode.OK, response.status())
         }
         assertEquals(0, getTodos().count())
 
