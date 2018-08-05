@@ -30,7 +30,7 @@ val LOG: Logger = LoggerFactory.getLogger("todo-ktor-app")
 
 fun Todo.withUrl(request: ApplicationRequest): Todo {
     val local = request.local
-    this.url = "${local.scheme}://${local.host}:${local.port}/${this.id}"
+    this.url = "${local.scheme}://${local.host}/${this.id}"
     return this
 }
 

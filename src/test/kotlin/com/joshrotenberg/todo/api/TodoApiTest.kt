@@ -42,6 +42,11 @@ class TodoApiTest {
         val responseTodo = getTodo(todo.id!!)
 
         assertEquals(todo, responseTodo)
+        assertEquals(todo.title, responseTodo.title)
+        assertEquals(todo.order, responseTodo.order)
+        assertEquals(todo.completed, responseTodo.completed)
+        assertEquals("http://localhost/${responseTodo.id}", responseTodo.url)
+
     }
 
     @Test
@@ -68,10 +73,12 @@ class TodoApiTest {
             assertEquals(todo0.title, todos[0].title)
             assertEquals(todo0.order, todos[0].order)
             assertEquals(todo0.completed, todos[0].completed)
+            assertEquals("http://localhost/${todo0.id}", todos[0].url)
 
             assertEquals(todo1.title, todos[1].title)
             assertEquals(todo1.order, todos[1].order)
             assertEquals(todo1.completed, todos[1].completed)
+            assertEquals("http://localhost/${todo1.id}", todos[1].url)
         }
     }
 
