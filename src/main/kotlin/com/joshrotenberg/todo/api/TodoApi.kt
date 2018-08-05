@@ -65,7 +65,7 @@ fun Application.main() {
                     LOG.info("Creating ${todo}")
                     val id = Todo.generateId()
                     todos.createTodo(id, title = todo.title, order = todo.order, completed = todo.completed)
-                    call.respond(HttpStatusCode.Created, todo.copy(id = id))
+                    call.respond(HttpStatusCode.Created, todo.copy(id = id).withUrl(call.request))
                 } catch (e: com.google.gson.JsonSyntaxException) {
                     LOG.error("Syntax error in JSON")
                     call.respond(HttpStatusCode.BadRequest)
