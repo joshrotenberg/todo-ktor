@@ -10,7 +10,6 @@ import io.ktor.features.CORS
 import io.ktor.features.CallLogging
 import io.ktor.features.ContentNegotiation
 import io.ktor.gson.gson
-import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.request.ApplicationRequest
@@ -43,7 +42,10 @@ fun Application.main() {
     install(AutoHeadResponse)
     install(CORS) {
         method(HttpMethod.Options)
-        header(HttpHeaders.Range)
+        method(HttpMethod.Get)
+        method(HttpMethod.Post)
+        method(HttpMethod.Delete)
+        method(HttpMethod.Patch)
         anyHost()
         allowCredentials = true
     }
