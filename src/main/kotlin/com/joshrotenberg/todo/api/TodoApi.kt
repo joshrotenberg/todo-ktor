@@ -95,7 +95,7 @@ fun Application.main() {
 
             get("/") {
                 LOG.info("Fetching all todos")
-                call.respond(todos.getTodos())
+                call.respond(todos.getTodos().map { t -> t.withUrl(call.request) })
             }
 
             patch("/{id}") {
@@ -104,7 +104,7 @@ fun Application.main() {
                     LOG.info("Updating todo $id")
                     val todo = call.receive<Todo>()
                     todos.updateTodo(id, title = todo.title, order = todo.order, completed = todo.completed)
-                    call.respond(HttpStatusCode.OK, todos.getTodo(id))
+                    call.respond(HttpStatusCode.OK, todos.getTodo(id).withUrl(call.request))
                 } catch (e: java.util.NoSuchElementException) {
                     call.respond(HttpStatusCode.NotFound)
                 } catch (e: Exception) {
